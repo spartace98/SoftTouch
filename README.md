@@ -17,12 +17,11 @@ Sensor placement for grasping tasks in conventional robotic hands has been studi
     - "regression.py"
 
 ## Notes
-1. In the paper, we referred to configurations A1, B1, A2, and B2, which corresponds to the following subfolders in data
-- config1: A1
-- config2: B1
-- config3: A2
-- config4: B2
+1. During our experiments, we ran two manipulations for a single set. Post processing was done to separate the two manipulations. Files in data are post-processed. 
+2. Video showing the manipulation runs will be uploaded soon.  
 
 ## Acknowledgement
 - Professor Nancy: for her mentorship for this project
 - Carnegie Mellon University: for providing undergraduate funding (SURF, SURG) for this project
+
+For additional information, please contact Charlie at lchao98@gmail.com
