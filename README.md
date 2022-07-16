@@ -6,7 +6,8 @@ Repository containing contributed data and models described in Conference Paper 
 - Prediction_Models: Classifier and Regression Models to process sensor readings
   - please run the scripts titled "classifier.py" and "regression.py"
 
-## In the paper, we referred to configurations A1, B1, A2, and B2. In our data, we refer to them as config 1, 2, 3, and 4
+## Notes
+### In the paper, we referred to configurations A1, B1, A2, and B2. In our data, we refer to them as config 1, 2, 3, and 4
 - config1: A1
 - config2: B1
 - config3: A2
