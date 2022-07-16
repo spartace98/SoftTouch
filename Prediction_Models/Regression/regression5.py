@@ -33,7 +33,7 @@ Use all 150 data samples
 exp = "rockII"
 metric = "rotation_split"
 train_type = "Ridge"
-config_num = 6
+config_num = 4
 number_of_timesteps = 30 # 5 steps every 1 second
 threshold = 20 # 30 for translation, 20 for rotation
 model = "Ridge"
@@ -47,7 +47,8 @@ add_duration = True # useless given random spikes
 filter_check = False
 
 # file paths
-results_path = os.path.join(os.path.dirname(os.path.dirname(os. getcwd())), "Results", "config%s"%config_num, exp)
+repo_path = os.path.dirname((os.path.dirname(os.getcwd())))
+results_path = os.path.join(repo_path, "data", "config%s"%config_num, exp)
 binary_path = os.path.join(results_path, "results_%s_binary.csv"%exp)
 data = pd.read_csv(binary_path)
 num_runs = len(data)
@@ -57,7 +58,7 @@ original_indices = np.arange(num_runs)
 success_target_indices = original_indices[success_failure_target == 1]
 
 # FEATURES
-imu_path = os.path.join(results_path, "%s_imu"%exp, "trimmed_manipulations")
+imu_path = os.path.join(results_path, "%s_imu"%exp)
 video_path = os.path.join(results_path, "%s_video"%exp, "trimmed_angles")
 number_of_successful_features = len(success_target_indices)
 video_step = int(90/number_of_timesteps)
@@ -100,12 +101,8 @@ for index in success_target_indices:
     run = index + 1
     # print(run)
     # data_path = os.path.join(video_path, "apriltag", "apriltag_rotation_%s.csv"%(run))
-    data_path = os.path.join(video_path, "apriltag", "%s_apriltag_%s_%s.csv"%(exp, metric, run))
+    data_path = os.path.join(video_path, "%s_apriltag_%s_%s.csv"%(exp, metric, run))
     data_video = pd.read_csv(data_path, header = None)
-
-    # low pass filter the apriltag rotation
-    # data_video = utils.butter_lowpass_filter(data_video, cutoff = 5, fs = 30, order = 2)
-    # data_video = pd.DataFrame(data_video)
 
     data = data_video.groupby(data_video.index // video_step).mean()
 
@@ -117,14 +114,6 @@ for index in success_target_indices:
         data = -data
     apriltag_data[index, :, :] = data
 
-    if data.iloc[25, 0] > 80:
-        # temp_indices.append(index+1)
-        # plt.plot(data)
-        print(index + 1)
-
-# plt.legend(temp_indices)
-# plt.show()
-
 # Now select only data where the maximum is +-threshold from the mean
 # look at mean of the max values
 max_vals = []
@@ -135,10 +124,7 @@ for i in success_target_indices:
 # mean_of_max_vals = np.mean(max_vals)
 median_of_max_vals = np.median(max_vals)
 print("Length before filter is", len(apriltag_data[success_target_indices]))
-# print("Mean is", mean_of_max_vals)
 print("Median is", median_of_max_vals)
-
-# sys.exit()
 
 for i in success_target_indices:
     max_val = max(apriltag_data[i, :, :])
@@ -151,9 +137,6 @@ for i in success_target_indices:
         filtered_success_target_indices.append(i)
 success_target_indices = np.array(filtered_success_target_indices)
 print("Length after filter is", len(success_target_indices))
-
-# plt.plot(apriltag_data[success_target_indices].squeeze().transpose());plt.show()
-# sys.exit()
 
 number_of_successful_features = len(success_target_indices)
 
@@ -179,57 +162,29 @@ chosen_train_indices = chosen_train_test_indices[random_train_indices]
 random_test_indices = np.setdiff1d(indices, random_train_indices)
 chosen_test_indices = chosen_train_test_indices[random_test_indices]
 assert(any(np.isin(random_train_indices, random_test_indices)) == False)
-# sys.exit()
 
-# plt.plot(apriltag_data[random_train_indices].squeeze().transpose());plt.show()
-# sys.exit()
-
-# example_predictions = []
-# actual_angles = []
-# previous_angle_estimates # vector
 predicted_results = pd.DataFrame()
 actual_angles = pd.DataFrame()
 y_train_predicted_results = pd.DataFrame()
 y_train_actual_angles = pd.DataFrame()
 
 max_dist_translated = apriltag_data.squeeze().transpose().max(axis = 0)
-# max_dist_translated = max(max_dist_translated[random_test_indices])
 max_dist_translated = max_dist_translated.reshape((1, -1))
 mean_dist_translated = apriltag_data.squeeze().transpose().mean()
 
 previous_angles = apriltag_data[:, 0]
-# original_apriltag_data = np.copy(apriltag_data)
-# apriltag_data = apriltag_data.squeeze()
-# sys.exit()
-
 for i in range(number_of_timesteps-1):
     current_timestep = i + 1
 
     # 1. Prepare features set
-    # get imu data for current timestep
-    # train_data_2 = utils.get_imu_features(train_data_2, current_timestep)
-    # imu_features = train_data_2[:, :current_timestep, :]
     imu_features = train_data_2[:, current_timestep, :]
-    # imu_features = train_data_2[:, max(0, current_timestep-3):current_timestep, :]
-    # imu_features = get_features_with_velocity(train_data_2, current_timestep, 1)
-    # imu_features = get_features_with_vel_acc(train_data_2, current_timestep, 1)
-
-    # get camera data for current timestep
-    # camera = dl.get_camera_data(train_data_2, current_timestep)
 
     # imu_features
-    
     X = np.reshape(imu_features, (restricted_size, -1)) # collapse dimensions for appending previous angles
     X = np.concatenate((X, previous_angles), axis = 1)
-    # X = np.squeeze(X, axis = 1) # collapse dimensions for training
 
     # 2. Prepare target set
-    # y = dl.get_target(current_timestep)
-    # print(np.shape(apriltag_data))
     y = apriltag_data[:, current_timestep, :]
-
-    # plt.plot(apriltag_data.squeeze().transpose());plt.show()
-    # plt.scatter([current_timestep]*len(y), y)
 
     # do train test split here
     X_train = X[random_train_indices]
@@ -238,8 +193,6 @@ for i in range(number_of_timesteps-1):
     y_test = y[random_test_indices]
 
     # Fit to regression model
-    # reg = Ridge()
-    # reg = LinearRegression(fit_intercept = True)
     reg = svm.SVR(kernel = "linear")
     reg.fit(X_train, y_train.squeeze())
 
@@ -247,18 +200,8 @@ for i in range(number_of_timesteps-1):
     y_test_predicted = reg.predict(X_test.squeeze())
 
     # append predictions of X_train
-    # previous_angles[random_train_indices] = y_train_predicted
     previous_angles[random_train_indices] = y_train
     previous_angles[random_test_indices] = y_test_predicted[:, None]
-    # print(previous_angles)
-    # sys.exit()
-
-    # plt.scatter([current_timestep]*len(y_train), y_train)
-    # plt.scatter([current_timestep+1]*len(y_train), y_train_predicted)
-    # plt.show()
-
-    # example_predictions.append(y_test_predicted[0])
-    # actual_angles.append(y_test[0])
 
     y_train_predicted_results[i+1] = y_train_predicted.reshape(-1)
     y_train_actual_angles[i+1] = y_test.reshape(-1)
@@ -268,26 +211,7 @@ for i in range(number_of_timesteps-1):
 
     # find normalized MSE (wrt to the maximum distance translated during manip)
     root_mse_error = mean_squared_error(y_test, y_test_predicted)**0.5
-    # print("Root MSE Error for timestep %s is %s"%(current_timestep, root_mse_error))
     root_mse_across_timesteps.append(root_mse_error)
-
-    # max_dist_translated = max(y_test) - min(y_test)
-    # y_test = np.divide(y_test, max_dist_translated)
-    # y_test_predicted = np.divide(y_test_predicted, max_dist_translated)
-    # root_mse_error_normalised = mean_squared_error(y_test, y_test_predicted)**0.5
-    # root_mse_error_normalised = reg.score(X_test, y_test)
-    # root_mse_error_normalised = root_mse_error / mean_dist_translated
-
-    # max_dist_translated = max(y_test) - min(y_test)
-    # max_dist_translated = np.mean(y_test)
-    # root_mse_error_normalised = 1 - root_mse_error/abs(np.mean((y_test)))
-    # root_mse_error_normalised = mean_squared_error(y_test, y_test_predicted)**0.5 / max_dist_translated
-
-    # print("Normalised Root MSE Error for timestep %s is %s"%(current_timestep, root_mse_error_normalised))
-    # root_mse_across_timesteps.append(root_mse_error_normalised)
-
-# sys.exit()
-# plt.plot(apriltag_data.squeeze().transpose());plt.show()
 
 total_mse = sum(root_mse_across_timesteps)
 mse_across_timesteps = np.array(root_mse_across_timesteps)
@@ -301,9 +225,7 @@ if os.path.exists(result_folder) == False:
 filename = "mse_across_timesteps.csv"
 np.savetxt(os.path.join(result_folder, filename), mse_across_timesteps, delimiter = ",")
 print("Total MSE =", total_mse)
-# print("Reg Score =", 1-total_mse/(number_of_timesteps-1))
 print("Reg Score =", total_mse/(number_of_timesteps-1))
-# print(total_mse/29)
 
 filename = "y_test_predicted_values.csv"
 predicted_results.index = chosen_test_indices

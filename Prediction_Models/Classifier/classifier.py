@@ -36,7 +36,7 @@ config_index = 3
 activate_cross_corr = False
 imu_step = 7
 add_duration = True
-isGreedy = False
+isGreedy = False # for sensor selection
 ith_comb = 23
 if isGreedy:
     num_sensors_to_keep = len(utils.greedy_sensor_selector(ith_comb))
@@ -44,9 +44,8 @@ else:
     num_sensors_to_keep = 5
 control_threshold = 300 # imu threshold (based on variance) --> should be 0.01
 contact_threshold = 50 # force threshold (based on absolute value)
-# num_runs_collected = 360
-# indices_runs_collected = np.arange(0, num_runs_collected, 1)
-base_address = "/Users/lichao/Documents/GitHub/FoamHandLabSummerResearch/Results/config%s/%s/%s_imu/trimmed_manipulations"%(config_index, exp, exp)
+repo_path = os.path.dirname((os.path.dirname(os.getcwd())))
+base_address = os.path.join(repo_path, "data", "config%s"%config_index, exp, "%s_imu"%exp)
 
 # create result file to store train results
 result_folder = os.path.join(model, "config%s"%config_index)
@@ -58,8 +57,9 @@ if os.path.exists(result_folder) == False:
 
 # RETRIEVE TARGET DATA
 # target = pd.read_csv("results_%s_binary_config%s.csv"%(exp, config_index))["success"]
-results_path = os.path.join(os.path.dirname(os.path.dirname(os. getcwd())), "Results", "config%s"%config_index, exp)
+results_path = os.path.join(repo_path, "data", "config%s"%config_index, exp)
 binary_path = os.path.join(results_path, "results_%s_binary.csv"%exp)
+
 target = pd.read_csv(binary_path)["success"]
 num_runs_collected = len(target)
 # num_runs_collected = 300
@@ -77,20 +77,6 @@ for i in run_indices_to_ignore:
     run_indices_to_ignore_set.add(i[0])
 
 run_indices = random_sampling(reasons, run_indices_to_ignore_set, num_success = 120, num_slip = 10, num_no_manip = 10, num_no_obj = 10, rand_seed = rand_seed)
-# remove the -1 indices
-# run_indices_to_remove = []
-# for i in run_indices:
-#     if target[i] < 0:
-#         run_indices_to_remove.append(i)
-# # run_indices_to_remove.append(210)
-# # run_indices_to_remove.append(211)
-# for i in run_indices_to_remove:
-#     run_indices.remove(i)
-    # try:
-    #     run_indices.remove(i)
-    # except:
-    #     pass
-
 num_runs = len(run_indices)
 scaling_factor, train_data_2, train_data_non_avg, control_errors_relative_index = utils.get_training_data(exp, base_address, 
                                                                             run_indices, num_sensors, 
@@ -108,13 +94,6 @@ contact_duration = utils.get_force_contact_duration2(force_readings, contact_thr
 # apply thresholding at this step to filter out control errors and non contacts
 
 control_errors = [run_indices[i[0]] for i in control_errors_relative_index]
-
-# FUNCTION NOT GOOD
-# control_errors, _ = utils.get_control_contact_error_indices(train_data_non_avg, 
-                                                            # force_readings, 
-                                                            # num_condensed_samples_per_dim, 
-                                                            # control_threshold/scaling_factor, 
-                                                            # contact_threshold)
 
 # find the non filtered control errors
 # actual_control_errors_indices = np.arange(num_runs, num_runs-10, -1)
@@ -152,26 +131,11 @@ train_data_2 = pd.DataFrame(train_data_2, index = run_indices)
 target = target[run_indices]
 reasons = reasons[run_indices]
 
-# plot contact duration scattered with the indices for failures
-# plt.scatter(run_indices, contact_duration, color = "green", s = 1)
-# plt.scatter(run_indices, target == 1, color = "red", s = 1)
-# plt.show()
-
-# sys.exit()
-
 for i in range(1, 2):
     train_data = train_data_2
     accuracy_across_diff_sizes = []
     auroc_across_diff_sizes = []
     natural_dist_test_set = []
-
-    # # remove data not involved in training
-    # train_data = train_data.drop(labels = values_to_drop)
-    # target = target.drop(labels = values_to_drop)
-    # assert(len(train_data) == len(target))
-
-    # # remove untrain data from control_errors
-    # control_errors = control_errors.difference(values_to_drop)
 
     # Check if the data is trainable
     to_train = True
