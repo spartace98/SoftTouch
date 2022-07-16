@@ -6,8 +6,15 @@ Sensor placement for grasping tasks in conventional robotic hands has been studi
 
 ## Folder Hierarchy
 - data: Sensor readings + AprilTag readings for all the configurations
+  - config1 (A1)
+  - config2 (B1)
+  - config3 (A2)
+  - config4 (B2)
 - Prediction_Models: Classifier and Regression Models to process sensor readings
-  - please run the scripts titled "classifier.py" and "regression.py"
+  - Classifier
+    - "classifier.py"
+  - Regression
+    - "regression.py"
 
 ## Notes
 1. In the paper, we referred to configurations A1, B1, A2, and B2, which corresponds to the following subfolders in data
