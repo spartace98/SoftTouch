@@ -24,4 +24,4 @@ Sensor placement for grasping tasks in conventional robotic hands has been studi
 - Professor Nancy: for her mentorship for this project
 - Carnegie Mellon University: for providing undergraduate funding (SURF, SURG) for this project
 
-For additional information, please contact Charlie at lchao98@gmail.com
+For additional information, please contact Charlie at chaoli.charlie@gmail.com
