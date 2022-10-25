@@ -16,6 +16,9 @@ Sensor placement for grasping tasks in conventional robotic hands has been studi
   - Regression
     - "regression.py"
 
+## Raw Regression Results
+<img width="592" alt="image" src="https://user-images.githubusercontent.com/36890067/197688155-5e2a4129-d3d9-4b18-93d4-09ce1a1de3fc.png">
+
 ## Notes
 1. During our experiments, we ran two manipulations for a single set. Post processing was done to separate the two manipulations. Files in data are post-processed. 
 2. Video showing the manipulation runs will be uploaded soon.  
